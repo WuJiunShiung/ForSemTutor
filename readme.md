@@ -32,11 +32,11 @@
 
 - 註冊 [卓騰科技公司](https://api.droidtown.co/login/) 帳號。
 
-![pic1](E:\ForSemTutor\pics\pic1.png)
+![pic1](pics/pic1.png)
 
 - 使用卓騰科技的Loki做句型的解析、學習，並可以從其學習到的句型做衍生，使用者可以使用自己的句子來發問。Loki學習句型，不需要大量語料，只要設計者小心的歸納出發問的可能方式，每種句型只需要一個句子，Loki就可以將句型學習起來。
 
-![pic2](E:\ForSemTutor\pics\pic2.png)
+![pic2](pics/pic2.png)
 
 ---------------------------------------------------
 
