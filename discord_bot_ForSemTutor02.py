@@ -14,7 +14,7 @@ from ForSemTutor import *
 from intent.Loki_Basics import userDefinedDICT
 from pprint import pprint
 
-logging.basicConfig(level=logging.CRITICAL)
+logging.basicConfig(level=logging.INFO)
 
 with open("account.info", encoding="utf-8") as f:
     accountDICT = json.loads(f.read())
@@ -76,7 +76,6 @@ async def on_ready():
     print("[READY INFO] {} has connected to Discord!".format(client.user))
 
 @client.event
-
 async def on_message(message):
     if not re.search("<@[!&]{}> ?".format(client.user.id), message.content):
         # 只有 @Bot 才會回應
@@ -86,7 +85,8 @@ async def on_message(message):
         return
 
     # Greetings
-    print("client.user.id =", client.user.id, "\nmessage.content =", message.content)
+    logging.info(message)
+    logging.info("client.user.id ={}\nmessage.content = {}".format(client.user.id, message.content))
     msgSTR = re.sub("<@[!&]{}> ?".format(client.user.id), "", message.content)    # 收到 User 的訊息，將 id 取代成 ""
     logging.info(msgSTR)
     #print("msgSTR =", msgSTR)
