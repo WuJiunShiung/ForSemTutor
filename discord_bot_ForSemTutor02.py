@@ -17,6 +17,8 @@ from pprint import pprint
 
 logging.basicConfig(level=logging.INFO)
 
+client = discord.Client()
+
 with open("account.info", encoding="utf-8") as f:
     accountDICT = json.loads(f.read())
 
@@ -68,7 +70,7 @@ def getLokiResult(inputSTR):
     print("Loki Result => {}".format(resultDICT))
     return resultDICT
 
-<<<<<<< HEAD
+#<<<<<<< HEAD
 @client.event
 async def on_ready():
     logging.info("[READY INFO] {} has connected to Discord!".format(client.user))
@@ -132,7 +134,7 @@ async def on_message(message):
                 for key in userDefinedDICT:
                     if mscDICT[client.user.id]['term'] in userDefinedDICT[key]:
                         query = mscDICT['client.user.id']['term']
-=======
+#=======
 class BotClient(discord.Client):
     async def on_ready(self):
         print('Logged on as {} with id {}'.format(self.user, self.user.id))
@@ -156,7 +158,7 @@ class BotClient(discord.Client):
             elif msgSTR in ("","哈囉","嗨","嗨嗨","你好","您好","在嗎","Hi","hi","hello","Hello","安安"):
                 replySTR = "有什麼形式語意的問題嗎？我可以幫你！"
                 await message.reply(replySTR)
->>>>>>> 96c6aca4971b4f940d91856b75e3f239aa530e6e
+
             else:
                 lokiResultDICT=getLokiResult(msgSTR)    # 取得 Loki 回傳結果
                 print(lokiResultDICT)
