@@ -17,8 +17,6 @@ from pprint import pprint
 
 logging.basicConfig(level=logging.INFO)
 
-client = discord.Client()
-
 with open("account.info", encoding="utf-8") as f:
     accountDICT = json.loads(f.read())
 
@@ -70,72 +68,16 @@ def getLokiResult(inputSTR):
     print("Loki Result => {}".format(resultDICT))
     return resultDICT
 
-#<<<<<<< HEAD
-@client.event
-async def on_ready():
-    logging.info("[READY INFO] {} has connected to Discord!".format(client.user))
-    print("[READY INFO] {} has connected to Discord!".format(client.user))
-
-@client.event
-async def on_message(message):
-    if not re.search("<@[!&]{}> ?".format(client.user.id), message.content):
-        # 只有 @Bot 才會回應
-        return
-
-    if message.author == client.user:
-        return
-
-    # Greetings
-    logging.info(message)
-    logging.info("client.user.id ={}\nmessage.content = {}".format(client.user.id, message.content))
-    msgSTR = re.sub("<@[!&]{}> ?".format(client.user.id), "", message.content)    # 收到 User 的訊息，將 id 取代成 ""
-    logging.info(msgSTR)
-    #print("msgSTR =", msgSTR)
-    replySTR = ""    # Bot 回應訊息
-
-    if msgSTR in ("","哈囉","嗨","嗨嗨","你好","您好","在嗎","Hi","hi","hello","Hello","安安"):
-        replySTR = "有什麼形式語意的問題嗎？我可以幫你！"
-        await message.reply(replySTR)
-
-    else:
-        lokiResultDICT=getLokiResult(msgSTR)    # 取得 Loki 回傳結果
-        print(lokiResultDICT)
-
-        if client.user.id not in mscDICT:    # 判斷 User 是否為第一輪對話
-            mscDICT[client.user.id] = templateDICT
-
-        # 處理時間差
-        datetimeNow = datetime.datetime.now()  # 取得當下時間
-        timeDIFF = datetimeNow - mscDICT[client.user.id]["time"]
-        if timeDIFF.total_seconds() <= 300:    # 以秒為單位，5分鐘以內都算是舊對話
-            mscDICT[client.user.id]["time"] = datetimeNow
-
-
-
-        #多輪對話
-        if lokiResultDICT:
-            for k in lokiResultDICT:    # 將 Loki Intent 的結果，存進 Global mscDICT 變數，可替換成 Database。
-                if k == "term":
-                    mscDICT[client.user.id]["term"] = lokiResultDICT["term"]
-                if k == "action":
-                    mscDICT[client.user.id]["action"] = lokiResultDICT["action"]
-                elif k == "type":
-                    mscDICT[client.user.id]['type'] = lokiResultDICT["type"]
-
-        print("mscDICT =")
-        pprint(mscDICT)
-
-        if mscDICT[client.user.id]["term"] == None:  # 多輪對話的問句。
-            replySTR = '請問，你想問什麼形式語意的問題呢？'
-            await message.reply(replySTR)
-
-        elif mscDICT[client.user.id]['action'] == "DefineTerm" and mscDICT[client.user.id]['type']==None:
-            if mscDICT[client.user.id]['term'] not in userDefinedDICT:
-                for key in userDefinedDICT:
-                    if mscDICT[client.user.id]['term'] in userDefinedDICT[key]:
-                        query = mscDICT['client.user.id']['term']
-#=======
 class BotClient(discord.Client):
+    def getNewConversationTemplate(self):
+        #多輪對話資訊：對話完成後，就再重新呼叫一次 getNewConversationTemplate() 以便把該使用者的前一輪對話資訊清空。
+        templateDICT = {"term":None,
+                        "action":None,
+                        "type":None,
+                        "completed":False,
+                        "time":datetime.datetime.now()}
+        return templateDICT
+
     async def on_ready(self):
         print('Logged on as {} with id {}'.format(self.user, self.user.id))
 
@@ -158,45 +100,44 @@ class BotClient(discord.Client):
             elif msgSTR in ("","哈囉","嗨","嗨嗨","你好","您好","在嗎","Hi","hi","hello","Hello","安安"):
                 replySTR = "有什麼形式語意的問題嗎？我可以幫你！"
                 await message.reply(replySTR)
-
             else:
                 lokiResultDICT=getLokiResult(msgSTR)    # 取得 Loki 回傳結果
                 print(lokiResultDICT)
 
-                if client.user.id not in mscDICT:    # 判斷 User 是否為第一輪對話
-                    mscDICT[client.user.id] = templateDICT
+                if message.author not in mscDICT:    # 判斷 User 是否為第一輪對話
+                    mscDICT[message.author] = templateDICT
 
                 # 處理時間差
                 datetimeNow = datetime.datetime.now()  # 取得當下時間
-                timeDIFF = datetimeNow - mscDICT[client.user.id]["time"]
+                timeDIFF = datetimeNow - mscDICT[message.author]["time"]
                 if timeDIFF.total_seconds() <= 300:    # 以秒為單位，5分鐘以內都算是舊對話
-                    mscDICT[client.user.id]["time"] = datetimeNow
+                    mscDICT[message.author]["time"] = datetimeNow
 
 
                 #多輪對話
                 if lokiResultDICT:
                     for k in lokiResultDICT:    # 將 Loki Intent 的結果，存進 Global mscDICT 變數，可替換成 Database。
                         if k == "term":
-                            mscDICT[client.user.id]["term"] = lokiResultDICT["term"]
+                            mscDICT[message.author]["term"] = lokiResultDICT["term"]
                         if k == "action":
-                            mscDICT[client.user.id]["action"] = lokiResultDICT["action"]
+                            mscDICT[message.author]["action"] = lokiResultDICT["action"]
                         elif k == "type":
-                            mscDICT[client.user.id]['type'] = lokiResultDICT["type"]
+                            mscDICT[message.author]['type'] = lokiResultDICT["type"]
 
                 print("mscDICT =")
                 pprint(mscDICT)
 
-                if mscDICT[client.user.id]["term"] == None:  # 多輪對話的問句。
+                if mscDICT[message.author]["term"] == None:  # 多輪對話的問句。
                     replySTR = '請問，你想問什麼形式語意的問題呢？'
                     await message.reply(replySTR)
 
-                elif mscDICT[client.user.id]['action'] == "DefineTerm" and mscDICT[client.user.id]['type']==None:
-                    if mscDICT[client.user.id]['term'] not in userDefinedDICT:
+                elif mscDICT[message.author]['action'] == "DefineTerm" and mscDICT[message.author]['type']==None:
+                    if mscDICT[message.author]['term'] not in userDefinedDICT:
                         for key in userDefinedDICT:
-                            if mscDICT[client.user.id]['term'] in userDefinedDICT[key]:
-                                query = mscDICT['client.user.id']['term']
+                            if mscDICT[message.author]['term'] in userDefinedDICT[key]:
+                                query = mscDICT[message.author]['term']
                     else:
-                        query = mscDICT[client.user.id]['term']
+                        query = mscDICT[message.author]['term']
 
                     if query  == "動詞":
                         replySTR = '請問是及物動詞還是不及物動詞？'
@@ -211,20 +152,20 @@ class BotClient(discord.Client):
                         await message.reply(replySTR)
 
 
-                elif mscDICT[client.user.id]['action'] == "comp":
-                    if mscDICT[client.user.id]['term'] == "句子":
+                elif mscDICT[message.author]['action'] == "comp":
+                    if mscDICT[message.author]['term'] == "句子":
                         await message.reply(sComp)
-                    elif mscDICT[client.user.id]['term'] == "動詞":
+                    elif mscDICT[message.author]['term'] == "動詞":
                         await message.reply(vpComp)
-                    elif mscDICT[client.user.id]['term'] == "名詞":
+                    elif mscDICT[message.author]['term'] == "名詞":
                         await message.reply(npComp)
 
 
-                elif mscDICT[client.user.id]['action'] == "DefineTerm" and mscDICT[client.user.id]['type']:
-                    query = mscDICT[client.user.id]['type']
+                elif mscDICT[message.author]['action'] == "DefineTerm" and mscDICT[message.author]['type']:
+                    query = mscDICT[message.author]['type']
                     replySTR = f"{query}的語意是：{termDICT[query]}"
 
-                del mscDICT[client.user.id]
+                del mscDICT[message.author]
 
 
 if __name__ == "__main__":
