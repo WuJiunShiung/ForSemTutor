@@ -47,13 +47,6 @@ sComp = """句子的語意由主語及動詞短語組合而成；由代表主語
 變為：[P(實體1, 實體2)]
 """
 
-#多輪對話資訊
-templateDICT = {"term":None,
-                "action":None,
-                "type":None,
-                #"completed":False,
-                "time":datetime.datetime.now()}
-
 mscDICT = {
     # "userID":{templateDICT}
     }
@@ -74,7 +67,6 @@ class BotClient(discord.Client):
         templateDICT = {"term":None,
                         "action":None,
                         "type":None,
-                        "completed":False,
                         "updatetime":datetime.datetime.now()}
         return templateDICT
 
@@ -88,17 +80,19 @@ class BotClient(discord.Client):
         if message.author == self.user:
             return None
 
-        print("收到來自 {} 的訊息".format(message.author.id))
-        print("訊息內容是 {}。".format(message.content))
+        #print("收到來自 {} 的訊息".format(message.author.id))
+        #print("訊息內容是 {}。".format(message.content))
         if self.user.mentioned_in(message):
-            print("本 bot 被叫到了！")
-            msgSTR = message.content.replace("<@!{}> ".format(self.user.id), "")
+            #print("本 bot 被叫到了！")
+            msgSTR = message.content.replace("<@!{}> ".format(self.user.id), "").replace("<@!{}>".format(self.user.id), "")
+            print(">> Human => Bot:{}".format(msgSTR))
             if msgSTR == 'ping':
                 await message.reply('pong')
             elif msgSTR == 'ping ping':
                 await message.reply('pong pong')
             elif msgSTR in ("","哈囉","嗨","嗨嗨","你好","您好","在嗎","Hi","hi","hello","Hello","安安"):
                 replySTR = "有什麼形式語意的問題嗎？我可以幫你！"
+                print(">> Bot => Human:{}".format(replySTR))
                 await message.reply(replySTR)
             else:
                 if message.author.id not in mscDICT:    # 判斷 message.author.id (a.k.a. 人類) 發來的訊息是否為第一輪對話。若不是，則呼叫 self.getNewConversationTemplate() 來重置對話資訊框架。
@@ -113,22 +107,24 @@ class BotClient(discord.Client):
                     mscDICT[message.author.id] = self.getNewConversationTemplate()
 
                 lokiResultDICT=getLokiResult(msgSTR)    # 取得 Loki 回傳結果
-                print("# lokiResult:", lokiResultDICT)
+                print("## Bot's understanding as lokiResultDICT:", lokiResultDICT)
                 #多輪對話
                 if lokiResultDICT:
-                    for k in lokiResultDICT:    # 將 Loki Intent 的結果，存進 Global mscDICT 變數，可替換成 Database。
+                    for k in lokiResultDICT.keys():    # 將 Loki Intent 的結果，存進 Global mscDICT 變數，可替換成 Database。
                         if k == "term":
                             mscDICT[message.author.id]["term"] = lokiResultDICT["term"]
                         if k == "action":
                             mscDICT[message.author.id]["action"] = lokiResultDICT["action"]
-                        elif k == "type":
+                        elif k == "type": #取得 type 的時候，表示問題從 DefineTerm 轉為 composition 了。
                             mscDICT[message.author.id]['type'] = lokiResultDICT["type"]
+                            mscDICT[message.author.id]["action"] = "comp"
 
-                print("# mscDICT =")
+                print("## Conversation state as mscDICT =")
                 pprint(mscDICT)
 
                 if mscDICT[message.author.id]["term"] == None:  # 多輪對話的問句。
                     replySTR = '請問，你想問什麼形式語意的問題呢？'
+                    print(">> Bot => Human:{}".format(replySTR))
                     await message.reply(replySTR)
 
                 elif mscDICT[message.author.id]['action'] == "DefineTerm" and mscDICT[message.author.id]['type']==None:
@@ -141,14 +137,17 @@ class BotClient(discord.Client):
 
                     if query  == "動詞":
                         replySTR = '請問是及物動詞還是不及物動詞？'
+                        print(">> Bot => Human:{}".format(replySTR))
                         await message.reply(replySTR)
 
                     elif query == "名詞":
                         replySTR = "請問是專有名詞還是普通名詞？"
+                        print(">> Bot => Human:{}".format(replySTR))
                         await message.reply(replySTR)
 
                     elif query == '形容詞':
                         replySTR = '請問是謂語形容詞還是屬性形容詞？'
+                        print(">> Bot => Human:{}".format(replySTR))
                         await message.reply(replySTR)
 
 
@@ -161,11 +160,12 @@ class BotClient(discord.Client):
                         await message.reply(npComp)
 
 
-                elif mscDICT[message.author.id]['action'] == "DefineTerm" and mscDICT[message.author.id]['type']:
+                elif mscDICT[message.author.id]['action'] == "DefineTerm" and mscDICT[message.author.id]['type'] != None:
                     query = mscDICT[message.author.id]['type']
                     replySTR = f"{query}的語意是：{termDICT[query]}"
+                    mscDICT[message.author.id] = self.getNewConversationTemplate() #對話完成了，重置 bot/human 之間的記憶。
 
-                del mscDICT[message.author.id]
+                #del mscDICT[message.author.id] #這行是「每一輪」都會做，如果 del 掉了「bot 和人類」之間的對話記錄，bot 就不會記得剛才這個人類來問過「動詞」的語意是什麼，以及 bot 問人類「及物或不及物」囉！
 
 
 if __name__ == "__main__":
