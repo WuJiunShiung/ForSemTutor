@@ -47,13 +47,13 @@ def getResult(inputSTR, utterance, args, resultDICT):
     if utterance == "什麼是[全稱量詞]的語意":
         resultDICT['term'] = args[0]
         resultDICT['action'] = 'DefineTerm'
-        
+
     if utterance == "[不及物]":
         for key in userDefinedDICT:
             if args[0] in userDefinedDICT[key]:
                 resultDICT['type'] = key
             else:
                 pass
-        
+
 
     return resultDICT
