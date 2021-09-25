@@ -122,8 +122,12 @@ class BotClient(discord.Client):
                 print("## Conversation state as mscDICT =")
                 pprint(mscDICT)
 
-                if mscDICT[message.author.id]["term"] == None:  # 多輪對話的問句。
+                if mscDICT[message.author.id]["term"] == None and mscDICT[message.author.id]["type"] == None:  # 多輪對話的問句。
                     replySTR = '請問，你想問什麼形式語意的問題呢？'
+                    print(">> Bot => Human:{}".format(replySTR))
+                    await message.reply(replySTR)
+                elif mscDICT[message.author.id]["term"] == None and mscDICT[message.author.id]["type"] != None:
+                    replySTR = "我不是很確定你的問題是什麼。"
                     print(">> Bot => Human:{}".format(replySTR))
                     await message.reply(replySTR)
 
@@ -155,15 +159,20 @@ class BotClient(discord.Client):
                     if mscDICT[message.author.id]['term'] == "句子":
                         await message.reply(sComp)
                     elif mscDICT[message.author.id]['term'] == "動詞":
-                        await message.reply(vpComp)
+                        await message.reply(termDICT[mscDICT[message.author.id]["type"]])
+                        #await message.reply(vpComp)
                     elif mscDICT[message.author.id]['term'] == "名詞":
-                        await message.reply(npComp)
+                        await message.reply(termDICT[mscDICT[message.author.id]["type"]])
+                        #await message.reply(npComp)
+
+                    mscDICT[message.author.id]["type"] = None #回覆人類後，將 type 重置為 None 以便應付下一輪對話。
 
 
                 elif mscDICT[message.author.id]['action'] == "DefineTerm" and mscDICT[message.author.id]['type'] != None:
                     query = mscDICT[message.author.id]['type']
                     replySTR = f"{query}的語意是：{termDICT[query]}"
                     mscDICT[message.author.id] = self.getNewConversationTemplate() #對話完成了，重置 bot/human 之間的記憶。
+                    await message.reply(replySTR)
 
                 #del mscDICT[message.author.id] #這行是「每一輪」都會做，如果 del 掉了「bot 和人類」之間的對話記錄，bot 就不會記得剛才這個人類來問過「動詞」的語意是什麼，以及 bot 問人類「及物或不及物」囉！
 

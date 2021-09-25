@@ -49,8 +49,10 @@ def getResult(inputSTR, utterance, args, resultDICT):
         resultDICT['action'] = 'DefineTerm'
 
     if utterance == "[不及物]":
-        for key in userDefinedDICT:
+        for key in userDefinedDICT.keys():
             if args[0] in userDefinedDICT[key]:
+                resultDICT['type'] = key
+            elif args[0] == key:
                 resultDICT['type'] = key
             else:
                 pass
