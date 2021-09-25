@@ -94,6 +94,10 @@ class BotClient(discord.Client):
                 replySTR = "有什麼形式語意的問題嗎？我可以幫你！"
                 print(">> Bot => Human:{}".format(replySTR))
                 await message.reply(replySTR)
+            elif msgSTR.lower() == "bye":
+                replySTR = "bye-bye～人類～ (我要刪除和你相關的所有記憶…)"
+                mscDICT.pop(message.author.id, None)
+                await message.reply(replySTR)
             else:
                 if message.author.id not in mscDICT:    # 判斷 message.author.id (a.k.a. 人類) 發來的訊息是否為第一輪對話。若不是，則呼叫 self.getNewConversationTemplate() 來重置對話資訊框架。
                     mscDICT[message.author.id] = self.getNewConversationTemplate()
